@@ -13,6 +13,8 @@ Each configuration file must contain the following fields:
 - **`VLLM_PORT`**: Port number for the VLLM API server
 - **`LOGS_PATH`**: Directory path to store log files
 - **`RESULT_DIR`**: Directory path to store benchmark results
+- **`max_concurrency`** (optional): Maximum concurrent requests per test case (default: 64)
+- **`num_prompts`** (optional): Number of prompts to generate per test case (default: 640)
 - **`in_out_lengths`**: Array of input/output token length configurations
 
 ## Sample Configurations

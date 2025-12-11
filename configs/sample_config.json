@@ -19,6 +19,14 @@
   "VLLM_PORT": 11169,
   "LOGS_PATH": "benchmark_logs",
   "RESULT_DIR": "benchmark_results",
+  "max_concurrency": {
+    "test_case_1": 64,
+    "test_case_2": 128
+  },
+  "num_prompts": {
+    "test_case_1": 640,
+    "test_case_2": 1280
+  },
   "in_out_lengths": [
     {
       "in": 100,
@@ -41,6 +49,8 @@
     "VLLM_PORT": "Port number for VLLM API server",
     "LOGS_PATH": "Directory to store log files",
     "RESULT_DIR": "Directory to store benchmark results",
+    "max_concurrency": "Maximum concurrent requests per test case (default: 64)",
+    "num_prompts": "Number of prompts to generate per test case (default: 640)",
     "in_out_lengths": "Array of input/output token lengths to test"
   }
 }

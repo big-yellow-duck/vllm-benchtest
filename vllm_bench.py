@@ -149,6 +149,10 @@ class VLLMBenchmark:
             self.logs_path = config.get("LOGS_PATH", self.logs_path)
             self.result_dir = config.get("RESULT_DIR", self.result_dir)
 
+            # Extract benchmark parameters
+            self.max_concurrency = config.get("max_concurrency", {})
+            self.num_prompts = config.get("num_prompts", {})
+
             # Enforce the new in_out_lengths format
             if "in_out_lengths" not in config:
                 self.logger.error(
@@ -449,6 +453,10 @@ class VLLMBenchmark:
         res_dir = Path(self.result_dir) / self.folder_name[test_case]
         res_dir.mkdir(parents=True, exist_ok=True)
 
+        # Get benchmark parameters for this test case or use defaults
+        max_concurrency = self.max_concurrency.get(test_case, 64)
+        num_prompts = self.num_prompts.get(test_case, 640)
+
         # Prepare benchmark command
         cmd = [
             "vllm",
@@ -468,9 +476,9 @@ class VLLMBenchmark:
             "--port",
             str(self.vllm_port),
             "--max-concurrency",
-            "64",
+            str(max_concurrency),
             "--num-prompts",
-            "640",
+            str(num_prompts),
             "--ignore-eos",
             "--percentile-metrics",
             "ttft,tpot,itl,e2el",
