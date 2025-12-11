@@ -2,22 +2,11 @@
 
 Automated benchmarking script for vLLM model serving performance across multiple configurations and token lengths.
 
-## Requirements
-
-```bash
-# Install vLLM (choose your platform)
-pip install vllm
-
-# For AMD GPUs
-pip install vllm[rocm]
-
-# For NVIDIA GPUs
-pip install vllm[cuda]
-
-# Additional dependencies
-pip install requests
+## Install vllm first
 ```
-
+pip install vllm 
+# or use this in the vllm docker container 
+```
 ## Quick Start
 
 1. **Copy a sample config:**
