@@ -1,0 +1,46 @@
+{
+  "_comment": "This is a sample configuration file for vLLM benchmarking. Copy this file and modify it according to your needs.",
+  "test_cases": [
+    "test_case_1",
+    "test_case_2"
+  ],
+  "env_vars": {
+    "test_case_1": "VLLM_USE_V1=1 CUDA_VISIBLE_DEVICES=0",
+    "test_case_2": "VLLM_USE_V1=1 CUDA_VISIBLE_DEVICES=0 VLLM_ATTENTION_BACKEND=FLASHINFER"
+  },
+  "model_params": {
+    "test_case_1": "facebook/opt-125m --max-model-len 2048",
+    "test_case_2": "facebook/opt-125m --max-model-len 2048 --kv-cache-dtype fp8"
+  },
+  "folder_name": {
+    "test_case_1": "opt125m_baseline",
+    "test_case_2": "opt125m_fp8_kv_cache"
+  },
+  "VLLM_PORT": 11169,
+  "LOGS_PATH": "benchmark_logs",
+  "RESULT_DIR": "benchmark_results",
+  "in_out_lengths": [
+    {
+      "in": 100,
+      "out": 100
+    },
+    {
+      "in": 512,
+      "out": 512
+    },
+    {
+      "in": 1024,
+      "out": 1024
+    }
+  ],
+  "_notes": {
+    "test_cases": "List of test case names",
+    "env_vars": "Environment variables for each test case",
+    "model_params": "Model name and VLLM parameters for each test case",
+    "folder_name": "Output folder name for each test case",
+    "VLLM_PORT": "Port number for VLLM API server",
+    "LOGS_PATH": "Directory to store log files",
+    "RESULT_DIR": "Directory to store benchmark results",
+    "in_out_lengths": "Array of input/output token lengths to test"
+  }
+}

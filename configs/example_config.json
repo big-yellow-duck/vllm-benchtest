@@ -1,0 +1,39 @@
+{
+  "test_cases": [
+    "test_case_1",
+    "test_case_2",
+    "test_case_3"
+  ],
+  "env_vars": {
+    "test_case_1": "ENV_VAR1=value1 ENV_VAR2=value2",
+    "test_case_2": "ENV_VAR1=value3 ENV_VAR2=value4",
+    "test_case_3": "ENV_VAR1=value5 ENV_VAR2=value6"
+  },
+  "model_params": {
+    "test_case_1": "facebook/opt-125m",
+    "test_case_2": "facebook/opt-350m",
+    "test_case_3": "facebook/opt-1.3b"
+  },
+  "folder_name": {
+    "test_case_1": "opt_125m_results",
+    "test_case_2": "opt_350m_results",
+    "test_case_3": "opt_1.3b_results"
+  },
+  "VLLM_PORT": 11169,
+  "LOGS_PATH": "cudagraph_logs",
+  "RESULT_DIR": "llama3.1bench/cudagraph_logs",
+  "in_out_lengths": [
+    {
+      "in": 1000,
+      "out": 1000
+    },
+    {
+      "in": 2000,
+      "out": 1500
+    },
+    {
+      "in": 5000,
+      "out": 2000
+    }
+  ]
+}

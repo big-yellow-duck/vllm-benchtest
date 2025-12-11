@@ -1,0 +1,54 @@
+{
+  "_comment": "Sample configuration for testing different CUDA Graph modes in vLLM",
+  "_description": "This config demonstrates how to benchmark different CUDA Graph optimizations",
+  "test_cases": [
+    "cuda_graph_full",
+    "cuda_graph_piecewise",
+    "cuda_graph_none"
+  ],
+  "env_vars": {
+    "cuda_graph_full": "VLLM_USE_V1=1 CUDA_VISIBLE_DEVICES=0",
+    "cuda_graph_piecewise": "VLLM_USE_V1=1 CUDA_VISIBLE_DEVICES=0",
+    "cuda_graph_none": "VLLM_USE_V1=1 CUDA_VISIBLE_DEVICES=0"
+  },
+  "model_params": {
+    "cuda_graph_full": "Qwen/Qwen2-0.5B-Instruct --max-model-len 4096 --compilation-config '{\"cudagraph_mode\":\"FULL\"}'",
+    "cuda_graph_piecewise": "Qwen/Qwen2-0.5B-Instruct --max-model-len 4096 --compilation-config '{\"cudagraph_mode\":\"PIECEWISE\"}'",
+    "cuda_graph_none": "Qwen/Qwen2-0.5B-Instruct --max-model-len 4096 --compilation-config '{\"cudagraph_mode\":\"NONE\"}'"
+  },
+  "folder_name": {
+    "cuda_graph_full": "qwen2_0.5b_cuda_full",
+    "cuda_graph_piecewise": "qwen2_0.5b_cuda_piecewise",
+    "cuda_graph_none": "qwen2_0.5b_cuda_none"
+  },
+  "VLLM_PORT": 11170,
+  "LOGS_PATH": "cuda_graph_logs",
+  "RESULT_DIR": "cuda_graph_results",
+  "in_out_lengths": [
+    {
+      "in": 32,
+      "out": 32
+    },
+    {
+      "in": 128,
+      "out": 128
+    },
+    {
+      "in": 512,
+      "out": 512
+    },
+    {
+      "in": 1024,
+      "out": 1024
+    },
+    {
+      "in": 2048,
+      "out": 512
+    }
+  ],
+  "_cuda_graph_modes_explained": {
+    "FULL": "Captures the entire forward pass, best for static workloads",
+    "PIECEWISE": "Captures parts of the computation, good for variable workloads",
+    "NONE": "Disables CUDA Graph, uses standard execution"
+  }
+}
