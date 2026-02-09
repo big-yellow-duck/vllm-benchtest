@@ -62,10 +62,8 @@ outputs/
 
 # Personal/private configs (keep only specific examples)
 configs/*
-!configs/example_config.json
-!configs/sample_config.json
-!configs/cuda_graph_sample.json
-!configs/old_sample_config.bash
+!configs/example_config.yaml
+!configs/cuda_graph_sample.yaml
 !configs/README.md
 
 # Model files and datasets (typically too large for git)

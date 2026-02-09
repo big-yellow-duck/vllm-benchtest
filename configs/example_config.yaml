@@ -1,0 +1,53 @@
+# vLLM Benchmark Configuration - YAML Format
+
+# List of test case names to run
+test_cases:
+  - test_case_1
+  - test_case_2
+  - test_case_3
+
+# Environment variables for each test case
+# Can be a dictionary or a space-separated string of KEY=value pairs
+env_vars:
+  test_case_1: "ENV_VAR1=value1 ENV_VAR2=value2"
+  test_case_2: "ENV_VAR1=value3 ENV_VAR2=value4"
+
+# Model parameters for each test case
+# These are the command-line arguments passed to "vllm serve"
+model_params:
+  test_case_1: "facebook/opt-125m"
+  test_case_2: "facebook/opt-350m"
+
+# vLLM server port
+VLLM_PORT: 11169
+
+# Output directory for logs and results
+output_dir: "cudagraph_output"
+
+# Input/output length pairs for random benchmarks
+# Each item must have 'in' and 'out' properties
+in_out_lengths:
+  - in: 1000
+    out: 1000
+  - in: 2000
+    out: 1500
+
+# Maximum concurrency for benchmarks (optional, per test case)
+# If not specified, defaults to 64
+max_concurrency:
+  test_case_1: 32
+  test_case_2: 32
+
+# Number of prompts for benchmarks (optional, per test case)
+# If not specified, defaults to 640
+num_prompts:
+  test_case_1: 32
+  test_case_2: 32
+
+# Optional: Number of retries when waiting for server to be ready
+# Default: 100
+WAIT_RETRIES: 100
+
+# Optional: Time to wait (in seconds) between server readiness checks
+# Default: 10
+WAIT_TIME: 10
