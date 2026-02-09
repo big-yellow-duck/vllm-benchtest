@@ -12,13 +12,8 @@
     "test_case_1": "facebook/opt-125m --max-model-len 2048",
     "test_case_2": "facebook/opt-125m --max-model-len 2048 --kv-cache-dtype fp8"
   },
-  "folder_name": {
-    "test_case_1": "opt125m_baseline",
-    "test_case_2": "opt125m_fp8_kv_cache"
-  },
   "VLLM_PORT": 11169,
-  "LOGS_PATH": "benchmark_logs",
-  "RESULT_DIR": "benchmark_results",
+  "output_dir": "benchmark_output",
   "max_concurrency": {
     "test_case_1": 64,
     "test_case_2": 128
@@ -45,10 +40,8 @@
     "test_cases": "List of test case names",
     "env_vars": "Environment variables for each test case",
     "model_params": "Model name and VLLM parameters for each test case",
-    "folder_name": "Output folder name for each test case",
     "VLLM_PORT": "Port number for VLLM API server",
-    "LOGS_PATH": "Directory to store log files",
-    "RESULT_DIR": "Directory to store benchmark results",
+    "output_dir": "Directory to store all output (logs go to output_dir/logs, results go to output_dir/results)",
     "max_concurrency": "Maximum concurrent requests per test case (default: 64)",
     "num_prompts": "Number of prompts to generate per test case (default: 640)",
     "in_out_lengths": "Array of input/output token lengths to test"

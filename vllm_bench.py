@@ -8,7 +8,6 @@ subprocess for better process management and error handling.
 """
 
 import argparse
-import json
 import logging
 import os
 import re
@@ -19,6 +18,7 @@ import time
 from pathlib import Path
 from typing import Optional, Tuple
 import requests
+import yaml
 
 
 def tail_log_file(file_path: str, lines: int = 10) -> str:
@@ -53,8 +53,7 @@ class VLLMBenchmark:
 
         # Default configuration (can be overridden by config file)
         self.vllm_port = 11169
-        self.logs_path = "default_logs"
-        self.result_dir = "default_results"
+        self.output_dir = "default_output"
         # Temporary console logger before config is loaded
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
@@ -77,7 +76,6 @@ class VLLMBenchmark:
         self.test_cases = []
         self.env_vars = {}
         self.model_params = {}
-        self.folder_name = {}
 
         # Process tracking
         self.server_process = None
@@ -89,7 +87,9 @@ class VLLMBenchmark:
         # Load configuration
         self.load_config()
         # Ensure log directory exists before full logging setup
-        Path(self.logs_path).mkdir(parents=True, exist_ok=True)
+        self.output_path = Path(self.output_dir)
+        self.output_path.mkdir(parents=True, exist_ok=True)
+        (self.output_path / "logs").mkdir(parents=True, exist_ok=True)
         # Setup logging
         self.setup_logging()
 
@@ -108,7 +108,7 @@ class VLLMBenchmark:
     def setup_logging(self):
         """Configure logging for the benchmark"""
         # Ensure logs directory exists
-        log_dir = Path(self.logs_path)
+        log_dir = self.output_path / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
 
         # Create benchmark log file with timestamp
@@ -129,7 +129,7 @@ class VLLMBenchmark:
         self.logger = logger
 
     def load_config(self):
-        """Load configuration from JSON file"""
+        """Load configuration from YAML file"""
         if not os.path.exists(self.config_file):
             self.logger.error(f"Configuration file {self.config_file} not found!")
             sys.exit(1)
@@ -138,16 +138,15 @@ class VLLMBenchmark:
 
         try:
             with open(self.config_file, "r") as f:
-                config = json.load(f)
+                config = yaml.safe_load(f)
 
             # Extract configuration values
             self.test_cases = config.get("test_cases", [])
             self.env_vars = config.get("env_vars", {})
             self.model_params = config.get("model_params", {})
-            self.folder_name = config.get("folder_name", {})
             self.vllm_port = config.get("VLLM_PORT", self.vllm_port)
-            self.logs_path = config.get("LOGS_PATH", self.logs_path)
-            self.result_dir = config.get("RESULT_DIR", self.result_dir)
+            self.output_dir = config.get("output_dir", self.output_dir)
+            self.output_path = Path(self.output_dir)
 
             # Extract benchmark parameters
             self.max_concurrency = config.get("max_concurrency", {})
@@ -159,7 +158,7 @@ class VLLMBenchmark:
                     "Configuration must include 'in_out_lengths' array with objects containing 'in' and 'out' properties"
                 )
                 self.logger.error(
-                    'Example: "in_out_lengths": [{"in": 1000, "out": 1000}, {"in": 2000, "out": 2000}]'
+                    'Example: in_out_lengths:\n  - in: 1000\n    out: 1000\n  - in: 2000\n    out: 2000'
                 )
                 sys.exit(1)
 
@@ -207,8 +206,8 @@ class VLLMBenchmark:
                 f"Loaded {len(self.test_cases)} test cases from configuration"
             )
 
-        except json.JSONDecodeError as e:
-            self.logger.error(f"Error parsing JSON configuration: {e}")
+        except yaml.YAMLError as e:
+            self.logger.error(f"Error parsing YAML configuration: {e}")
             sys.exit(1)
         except Exception as e:
             self.logger.error(f"Error loading configuration: {e}")
@@ -342,7 +341,7 @@ class VLLMBenchmark:
         # Prepare server log file with timestamp for uniqueness
         timestamp = time.strftime("%Y%m%d_%H%M%S")
         server_log_file = (
-            Path(self.logs_path)
+            self.output_path / "logs"
             / f"serverlog_{self.get_log_filename(test_case)}_{timestamp}.log"
         )
 
@@ -450,7 +449,7 @@ class VLLMBenchmark:
         model_name = self.model_params[test_case].split()[0]
 
         # Prepare result directory
-        res_dir = Path(self.result_dir) / self.folder_name[test_case]
+        res_dir = self.output_path / "results" / self.get_log_filename(test_case)
         res_dir.mkdir(parents=True, exist_ok=True)
 
         # Get benchmark parameters for this test case or use defaults
@@ -487,7 +486,7 @@ class VLLMBenchmark:
         ]
 
         # Prepare log file
-        log_file = Path(self.logs_path) / f"{self.get_log_filename(test_case)}.log"
+        log_file = self.output_path / "logs" / f"{self.get_log_filename(test_case)}.log"
 
         try:
             # Start benchmark process with line buffering for real-time logging
@@ -704,8 +703,9 @@ class VLLMBenchmark:
             f"Server failure behavior: {'STOP ON FAILURE' if self.stop_on_failure else 'CONTINUE ON FAILURE'}"
         )
 
-        # Create logs directory
-        Path(self.logs_path).mkdir(parents=True, exist_ok=True)
+        # Create output directories
+        (self.output_path / "logs").mkdir(parents=True, exist_ok=True)
+        (self.output_path / "results").mkdir(parents=True, exist_ok=True)
 
         # Run each test case
         for test_case in self.test_cases:
@@ -737,10 +737,8 @@ class VLLMBenchmark:
         print("  - test_cases[]             : Array of test case definitions")
         print("  - env_vars[test_case]      : Dictionary of environment variables")
         print("  - model_params[test_case]      : Dictionary of model parameters")
-        print("  - folder_name[test_case]       : Dictionary of folder names")
         print("  - VLLM_PORT                    : VLLM server port for benchmark")
-        print("  - LOGS_PATH                    : Path to store run logs")
-        print("  - RESULT_DIR                   : Path to store benchmark results")
+        print("  - output_dir                   : Path to store all output (logs and results)")
         print(
             "  - in_out_lengths[]            : Array of {'in': x, 'out': y} objects (required)"
         )

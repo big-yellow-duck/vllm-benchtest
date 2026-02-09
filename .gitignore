@@ -60,11 +60,13 @@ outputs/
 *.temp
 .cache/
 
-# Personal/private configs (keep examples)
-configs/*.json
+# Personal/private configs (keep only specific examples)
+configs/*
 !configs/example_config.json
-!configs/*sample*.json
-!configs/*template*.json
+!configs/sample_config.json
+!configs/cuda_graph_sample.json
+!configs/old_sample_config.bash
+!configs/README.md
 
 # Model files and datasets (typically too large for git)
 *.bin

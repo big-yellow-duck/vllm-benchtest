@@ -16,14 +16,8 @@
     "cuda_graph_piecewise": "Qwen/Qwen2-0.5B-Instruct --max-model-len 4096 --compilation-config '{\"cudagraph_mode\":\"PIECEWISE\"}'",
     "cuda_graph_none": "Qwen/Qwen2-0.5B-Instruct --max-model-len 4096 --compilation-config '{\"cudagraph_mode\":\"NONE\"}'"
   },
-  "folder_name": {
-    "cuda_graph_full": "qwen2_0.5b_cuda_full",
-    "cuda_graph_piecewise": "qwen2_0.5b_cuda_piecewise",
-    "cuda_graph_none": "qwen2_0.5b_cuda_none"
-  },
   "VLLM_PORT": 11170,
-  "LOGS_PATH": "cuda_graph_logs",
-  "RESULT_DIR": "cuda_graph_results",
+  "output_dir": "cuda_graph_output",
   "in_out_lengths": [
     {
       "in": 32,
