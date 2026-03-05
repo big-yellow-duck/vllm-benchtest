@@ -325,12 +325,24 @@ class VLLMBenchmark:
         params_list = model_params.split()
         sanitized_params = []
         
-        for param in params_list:
-            # Check if this parameter contains JSON content (starts with single quote and has JSON structure)
-            if param.startswith("'") and param.endswith("'") and ("{" in param and "}" in param):
-                # Remove the surrounding single quotes from JSON strings
-                param = param.strip("'")
-            sanitized_params.append(param)
+        i = 0
+        while i < len(params_list):
+            param = params_list[i]
+            
+            # Check if this parameter starts a JSON value (starts with single quote and contains {)
+            if param.startswith("'") and "{" in param:
+                # Collect all parts until we find the closing single quote
+                json_parts = [param]
+                while i + 1 < len(params_list) and not params_list[i].endswith("'"):
+                    i += 1
+                    json_parts.append(params_list[i])
+                
+                # Join the parts and remove surrounding single quotes
+                full_json = " ".join(json_parts).strip("'")
+                sanitized_params.append(full_json)
+            else:
+                sanitized_params.append(param)
+            i += 1
         
         cmd = (
             ["vllm", "serve"]
