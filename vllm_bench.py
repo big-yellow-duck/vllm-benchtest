@@ -145,7 +145,11 @@ class VLLMBenchmark:
             self.env_vars = config.get("env_vars", {})
             self.model_params = config.get("model_params", {})
             self.vllm_port = config.get("VLLM_PORT", self.vllm_port)
-            self.output_dir = config.get("output_dir", self.output_dir)
+            
+            # Get base output dir from config and append timestamp for uniqueness
+            base_output_dir = config.get("output_dir", self.output_dir)
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            self.output_dir = f"{base_output_dir}_{timestamp}"
             self.output_path = Path(self.output_dir)
 
             # Extract benchmark parameters
