@@ -1,10 +1,12 @@
 # vLLM Benchmark Configuration - YAML Format
 
 # List of test case names to run
+
 test_cases:
   - test_case_1
   - test_case_2
-  - test_case_3
+  # comment out test cases to skip them 
+  # - test_case_3
 
 # Environment variables for each test case
 # Can be a dictionary or a space-separated string of KEY=value pairs
