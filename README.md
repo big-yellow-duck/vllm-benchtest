@@ -36,10 +36,11 @@ Configuration files use **YAML format** and define test cases with:
 - `VLLM_PORT`: API server port (default: 11169)
 - `output_dir`: Output directory for logs and results
 - `in_out_lengths`: Array of input/output token length pairs
-- `max_concurrency`: Optional max concurrency per test case (default: 64)
-- `num_prompts`: Optional number of prompts per test case (default: 640)
+- `max_concurrency`: Optional max concurrency shared across test cases (default: 64)
+- `num_prompts`: Optional prompt count shared across test cases (default: 640)
 - `WAIT_RETRIES`: Optional server readiness check retries (default: 100)
 - `WAIT_TIME`: Optional wait time between checks in seconds (default: 10)
+- `plot_config`: Optional post-run plotting config with `baseline` and `overview_title`
 
 **Example:**
 ```yaml
@@ -66,13 +67,13 @@ in_out_lengths:
   - in: 1024
     out: 1024
 
-max_concurrency:
-  baseline: 64
-  optimized: 128
+max_concurrency: 64
 
-num_prompts:
-  baseline: 640
-  optimized: 1280
+num_prompts: 640
+
+plot_config:
+  baseline: baseline
+  overview_title: "Benchmark Comparison Overview"
 ```
 
 ## Usage
@@ -88,6 +89,12 @@ python vllm_bench.py --config <config_file> --stop-on-server-failure
 python vllm_bench.py --config <config_file> --live-logs
 ```
 
+If `plot_config` is present, `vllm_bench.py` automatically runs `plot_benchmark_results.py` after benchmarking completes with:
+- `--results-dir <output_dir_timestamp>/results`
+- `--output-dir <output_dir_timestamp>/plots`
+- optional `--baseline` from `plot_config.baseline`
+- optional `--overview-title` from `plot_config.overview_title`
+
 ## Output Structure
 
 ```
@@ -98,6 +105,11 @@ results/
 └── <folder_name>/
     ├── ISL-<in>-OSL-<out>.json
     └── ...
+
+plots/
+├── comparison_overview.png
+├── mean_ttft_ms.png
+└── ...
 
 benchmark_<timestamp>.log  # Master log file
 ```
@@ -120,3 +132,4 @@ pkill -f "^vllm serve"
 - Clears `~/.cache/vllm` before each test
 - Each test runs `vllm bench serve` for all input/output length pairs
 - Results saved as JSON with throughput and latency metrics
+- `max_concurrency` and `num_prompts` accept a single integer for all test cases; the older per-test mapping format is still accepted for compatibility

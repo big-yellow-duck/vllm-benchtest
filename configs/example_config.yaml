@@ -34,17 +34,13 @@ in_out_lengths:
   - in: 2000
     out: 1500
 
-# Maximum concurrency for benchmarks (optional, per test case)
+# Maximum concurrency for benchmarks (optional)
 # If not specified, defaults to 64
-max_concurrency:
-  test_case_1: 32
-  test_case_2: 32
+max_concurrency: 32
 
-# Number of prompts for benchmarks (optional, per test case)
+# Number of prompts for benchmarks (optional)
 # If not specified, defaults to 640
-num_prompts:
-  test_case_1: 32
-  test_case_2: 32
+num_prompts: 32
 
 # Optional: Number of retries when waiting for server to be ready
 # Default: 100
@@ -53,3 +49,10 @@ WAIT_RETRIES: 100
 # Optional: Time to wait (in seconds) between server readiness checks
 # Default: 10
 WAIT_TIME: 10
+
+# Optional: Automatically generate plots after benchmarking completes
+# Results are read from <output_dir_timestamp>/results
+# Plots are written to <output_dir_timestamp>/plots
+plot_config:
+  baseline: test_case_1
+  overview_title: "Example Benchmark Overview"

@@ -12,6 +12,7 @@ import logging
 import os
 import re
 import signal
+import shlex
 import subprocess
 import sys
 import time
@@ -76,6 +77,7 @@ class VLLMBenchmark:
         self.test_cases = []
         self.env_vars = {}
         self.model_params = {}
+        self.plot_config = None
 
         # Process tracking
         self.server_process = None
@@ -95,6 +97,22 @@ class VLLMBenchmark:
 
         # Register signal handlers for cleanup
         signal.signal(signal.SIGINT, self.signal_handler)
+
+    @staticmethod
+    def resolve_test_case_value(config_value, test_case: str, default: int) -> int:
+        """Resolve either a global integer value or a legacy per-test-case mapping."""
+        if config_value is None:
+            return default
+
+        if isinstance(config_value, int):
+            return config_value
+
+        if isinstance(config_value, dict):
+            return config_value.get(test_case, default)
+
+        raise ValueError(
+            f"Expected integer or mapping for test case value, got {type(config_value).__name__}"
+        )
 
     def signal_handler(self, signum, frame):
         """Handle SIGINT signal for graceful shutdown"""
@@ -144,6 +162,7 @@ class VLLMBenchmark:
             self.test_cases = config.get("test_cases", [])
             self.env_vars = config.get("env_vars", {})
             self.model_params = config.get("model_params", {})
+            self.plot_config = config.get("plot_config")
             self.vllm_port = config.get("VLLM_PORT", self.vllm_port)
             
             # Get base output dir from config and append timestamp for uniqueness
@@ -153,8 +172,8 @@ class VLLMBenchmark:
             self.output_path = Path(self.output_dir)
 
             # Extract benchmark parameters
-            self.max_concurrency = config.get("max_concurrency", {})
-            self.num_prompts = config.get("num_prompts", {})
+            self.max_concurrency = config.get("max_concurrency", 64)
+            self.num_prompts = config.get("num_prompts", 640)
 
             # Enforce the new in_out_lengths format
             if "in_out_lengths" not in config:
@@ -205,6 +224,14 @@ class VLLMBenchmark:
                         f"Invalid values at in_out_lengths[{i}]. 'in' and 'out' must be integers"
                     )
                     sys.exit(1)
+
+            if not isinstance(self.max_concurrency, (int, dict)):
+                self.logger.error("'max_concurrency' must be an integer or mapping")
+                sys.exit(1)
+
+            if not isinstance(self.num_prompts, (int, dict)):
+                self.logger.error("'num_prompts' must be an integer or mapping")
+                sys.exit(1)
 
             self.logger.info(
                 f"Loaded {len(self.test_cases)} test cases from configuration"
@@ -469,8 +496,10 @@ class VLLMBenchmark:
         res_dir.mkdir(parents=True, exist_ok=True)
 
         # Get benchmark parameters for this test case or use defaults
-        max_concurrency = self.max_concurrency.get(test_case, 64)
-        num_prompts = self.num_prompts.get(test_case, 640)
+        max_concurrency = self.resolve_test_case_value(
+            self.max_concurrency, test_case, 64
+        )
+        num_prompts = self.resolve_test_case_value(self.num_prompts, test_case, 640)
 
         # Prepare benchmark command
         cmd = [
@@ -730,6 +759,74 @@ class VLLMBenchmark:
         # Generate final summary
         self.generate_summary()
 
+        if self.plot_config:
+            self.run_plotting()
+
+    def run_plotting(self) -> bool:
+        """Generate plots from benchmark results if plot_config is provided."""
+        if not isinstance(self.plot_config, dict):
+            self.logger.error("plot_config must be a mapping when provided")
+            return False
+
+        results_dir = self.output_path / "results"
+        plots_dir = self.output_path / "plots"
+        plot_script = Path(__file__).with_name("plot_benchmark_results.py")
+
+        if not plot_script.exists():
+            self.logger.error(f"Plot script not found: {plot_script}")
+            return False
+
+        if not results_dir.exists():
+            self.logger.error(f"Results directory not found for plotting: {results_dir}")
+            return False
+
+        cmd = [
+            sys.executable,
+            str(plot_script),
+            "--results-dir",
+            str(results_dir),
+            "--output-dir",
+            str(plots_dir),
+        ]
+
+        baseline = self.plot_config.get("baseline")
+        if baseline:
+            cmd.extend(["--baseline", str(baseline)])
+
+        overview_title = self.plot_config.get("overview_title")
+        if overview_title:
+            cmd.extend(["--overview-title", str(overview_title)])
+
+        self.logger.info("Generating plots from benchmark results...")
+        self.logger.info(f"Plot command: {shlex.join(cmd)}")
+
+        try:
+            plots_dir.mkdir(parents=True, exist_ok=True)
+            result = subprocess.run(
+                cmd,
+                cwd=str(self.output_path),
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+
+            if result.stdout:
+                self.logger.info(f"Plot stdout:\n{result.stdout}")
+            if result.stderr:
+                self.logger.warning(f"Plot stderr:\n{result.stderr}")
+
+            if result.returncode != 0:
+                self.logger.error(
+                    f"Plot generation failed with exit code {result.returncode}"
+                )
+                return False
+
+            self.logger.info(f"Plots saved to: {plots_dir}")
+            return True
+        except Exception as e:
+            self.logger.error(f"Error running plot generation: {e}")
+            return False
+
     @staticmethod
     def print_help():
         """Print help message"""
@@ -757,6 +854,9 @@ class VLLMBenchmark:
         print("  - output_dir                   : Path to store all output (logs and results)")
         print(
             "  - in_out_lengths[]            : Array of {'in': x, 'out': y} objects (required)"
+        )
+        print(
+            "  - plot_config                 : Optional mapping with baseline and overview_title"
         )
         print("")
         print("Example: python vllm_bench.py --config ./example_config.json")
